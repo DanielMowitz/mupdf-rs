@@ -218,31 +218,34 @@ fn build_libmupdf() {
         ));
     }
 
-    let make = if cfg!(any(
-        target_os = "freebsd",
-        target_os = "openbsd",
-        target_os = "netbsd"
-    )) {
-        "gmake"
-    } else {
-        "make"
-    };
-    let output = Command::new(make)
-        .args(&make_flags)
-        .current_dir(&build_dir)
-        .stdout(Stdio::inherit())
-        .stderr(Stdio::inherit())
-        .output()
-        .expect("make failed");
-    if !output.status.success() {
-        let err = String::from_utf8_lossy(&output.stderr);
-        let out = String::from_utf8_lossy(&output.stdout);
-        panic!("Build error:\nSTDERR:{}\nSTDOUT:{}", err, out);
-    }
+	 if cfg!(feature = "sys-lib") {
+		  let make = if cfg!(any(
+				target_os = "freebsd",
+				target_os = "openbsd",
+				target_os = "netbsd"
+		  )) {
+				"gmake"
+		  } else {
+				"make"
+		  };
+		  let output = Command::new(make)
+				.args(&make_flags)
+				.current_dir(&build_dir)
+				.stdout(Stdio::inherit())
+				.stderr(Stdio::inherit())
+				.output()
+				.expect("make failed");
+		  if !output.status.success() {
+				let err = String::from_utf8_lossy(&output.stderr);
+				let out = String::from_utf8_lossy(&output.stdout);
+				panic!("Build error:\nSTDERR:{}\nSTDOUT:{}", err, out);
+		  }
+	 }
+	 
     println!("cargo:rustc-link-search=native={}", build_dir.display());
-    println!("cargo:rustc-link-lib=static=mupdf");
+    println!("cargo:rustc-link-lib=dylib=mupdf");
     // println!("cargo:rustc-link-lib=static=mupdf-pkcs7");
-    println!("cargo:rustc-link-lib=static=mupdf-third");
+    // println!("cargo:rustc-link-lib=dylib=mupdf-third");
     // println!("cargo:rustc-link-lib=static=mupdf-threads");
 }
 
